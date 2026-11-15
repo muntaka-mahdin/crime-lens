@@ -19,7 +19,7 @@ export interface City {
   lng: number;
 }
 
-/** Compact payload sent from the API route to keep responses small. */
+/** Compact form used for the browser cache (London packs to about 1 MB instead of 3 MB). */
 export interface CompactCrimes {
   categories: string[];
   streets: string[];
@@ -27,11 +27,4 @@ export interface CompactCrimes {
   outcomes: string[];
   /** [id, categoryIdx, streetIdx, lat, lng, monthIdx, outcomeIdx (-1 = none)] */
   rows: [string, number, number, number, number, number, number][];
-}
-
-export interface CrimesResponse {
-  city: City;
-  months: string[];
-  crimes: CompactCrimes;
-  fetchedAt: string;
 }

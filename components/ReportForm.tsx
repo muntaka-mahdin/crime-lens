@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CATEGORY_LABELS } from "@/lib/categories";
+import { geocode } from "@/lib/geocode";
 import type { Crime } from "@/lib/types";
 
 interface Props {
@@ -28,9 +29,7 @@ export default function ReportForm({ defaultMonth, onClose, onSaved }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(location)}`);
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Location lookup failed.");
+      const body = await geocode(location);
       onSaved({
         id: `report-${Date.now()}`,
         category,

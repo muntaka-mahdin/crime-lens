@@ -1,8 +1,8 @@
 import type { City, Crime } from "./types";
 import { dedupeCrimes } from "./dedupe";
 
+// data.police.uk allows cross-origin requests, so the browser calls it directly.
 const BASE = "https://data.police.uk/api";
-const DAY = 60 * 60 * 24;
 
 interface RawCrime {
   id: number;
@@ -36,7 +36,7 @@ export function normaliseCrime(raw: RawCrime): Crime | null {
 
 /** The most recent `n` months that data.police.uk has published, newest first. */
 export async function latestMonths(n: number): Promise<string[]> {
-  const res = await fetch(`${BASE}/crimes-street-dates`, { next: { revalidate: DAY } });
+  const res = await fetch(`${BASE}/crimes-street-dates`);
   if (!res.ok) throw new Error(`crimes-street-dates failed: ${res.status}`);
   const dates = (await res.json()) as { date: string }[];
   return dates
@@ -48,12 +48,19 @@ export async function latestMonths(n: number): Promise<string[]> {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** data.police.uk allows about 15 requests a second and answers 429 when busy, so retry with a short backoff. */
-async function fetchWithRetry(url: string, tries = 4): Promise<Response> {
+/**
+ * data.police.uk allows about 15 requests a second and answers 429 when busy, so retry with a backoff.
+ * Its 429 replies carry no CORS header, so in the browser they surface as a network error instead.
+ */
+async function fetchWithRetry(url: string, tries = 5): Promise<Response> {
   for (let i = 0; ; i++) {
-    const res = await fetch(url, { next: { revalidate: DAY } });
-    if (res.status !== 429 || i >= tries - 1) return res;
-    await sleep(500 * 2 ** i);
+    try {
+      const res = await fetch(url);
+      if (res.status !== 429 || i >= tries - 1) return res;
+    } catch (err) {
+      if (i >= tries - 1) throw err;
+    }
+    await sleep(600 * 2 ** i);
   }
 }
 
@@ -69,10 +76,8 @@ async function fetchMonth(city: City, month: string): Promise<Crime[]> {
 
 /** Street-level crimes within a mile of the city centre for the given months. */
 export async function fetchCityCrimes(city: City, months: string[]): Promise<Crime[]> {
-  // Two months at a time keeps us well under the API's rate limit.
+  // One month at a time keeps each visitor well under the API's rate limit.
   const perMonth: Crime[][] = [];
-  for (let i = 0; i < months.length; i += 2) {
-    perMonth.push(...(await Promise.all(months.slice(i, i + 2).map((m) => fetchMonth(city, m)))));
-  }
+  for (const m of months) perMonth.push(await fetchMonth(city, m));
   return dedupeCrimes(perMonth.flat());
 }

@@ -2,11 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CITIES } from "@/lib/cities";
+import { CITIES, findCity } from "@/lib/cities";
 import { categoryLabel } from "@/lib/categories";
-import { unpackCrimes } from "@/lib/compact";
+import { loadCityCrimes } from "@/lib/data";
 import { applyFilters, countByCategory } from "@/lib/stats";
-import type { Crime, CrimesResponse } from "@/lib/types";
+import type { Crime } from "@/lib/types";
 import Charts from "./Charts";
 import CrimeList from "./CrimeList";
 import ReportForm from "./ReportForm";
@@ -47,20 +47,18 @@ export default function Dashboard() {
 
   // Only the latest request may update the page, so a slow old response can't overwrite a newer city.
   const requestId = useRef(0);
-  const load = useCallback(async (slug: string) => {
+  const load = useCallback(async (slug: string, fresh = false) => {
     const id = ++requestId.current;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/crimes?city=${slug}`);
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Something went wrong.");
-      const r = body as CrimesResponse;
+      const result = await loadCityCrimes(findCity(slug)!, { fresh });
       if (id !== requestId.current) return;
-      setData({ months: r.months, crimes: unpackCrimes(r.crimes), fetchedAt: r.fetchedAt });
+      setData(result);
     } catch (e) {
       if (id !== requestId.current) return;
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      console.error(e);
+      setError("Couldn't reach data.police.uk. Please try again in a minute.");
       setData(null);
     } finally {
       if (id === requestId.current) setLoading(false);
@@ -109,7 +107,7 @@ export default function Dashboard() {
         </div>
         <div className="actions">
           <button className="btn btn-primary" onClick={() => setShowForm(true)}>Report a crime</button>
-          <button className="btn" onClick={() => load(citySlug)} disabled={loading}>
+          <button className="btn" onClick={() => load(citySlug, true)} disabled={loading}>
             {loading ? "Loading…" : "Refresh police data"}
           </button>
           {reports.length > 0 && (

@@ -2,6 +2,8 @@
 
 An interactive street crime map and analytics dashboard for UK city centres, built on open data from [data.police.uk](https://data.police.uk).
 
+**Live demo: [muntaka123.github.io/crime-lens](https://muntaka123.github.io/crime-lens/)**
+
 Pick a city and Crime Lens shows the last six months of reported street crime on a map, with a heatmap of where it's concentrated, a filterable list, and charts for crime types, monthly trends and the top hotspots. You can also add your own report, which is geocoded from a typed address and shown on the map.
 
 > **About this version.** Crime Lens was my final year project for my BSc Computer Science at the University of Huddersfield (2025), originally built with Laravel, MySQL, Bootstrap, Leaflet.js and Chart.js. The original code was lost along with my old university GitHub account, so in November 2026 I rebuilt it from my project report in TypeScript and Next.js, so that it can run as a live demo. The features and design follow the report; the changes are listed below.
@@ -17,19 +19,22 @@ Pick a city and Crime Lens shows the last six months of reported street crime on
 
 ## How it works
 
+The whole app runs in the browser and is built to static files, so it can be hosted anywhere (it's on GitHub Pages, deployed by a GitHub Actions workflow on every push to `main`). Both data sources allow browser requests, so no backend or API keys are needed.
+
 ```
-Browser (React)                     Next.js API routes                    Open data
-──────────────────                  ─────────────────────                 ─────────────────
-Dashboard  ── GET /api/crimes ───▶  latest 6 months, fetched 2 at a  ──▶  data.police.uk
-  map / list / charts               time with retry on 429, deduped,
-  (filters run client-side)         packed into a compact format,
-                                    cached for a day
-ReportForm ── GET /api/geocode ──▶  UK-only address lookup          ──▶  OpenStreetMap Nominatim
+Browser (React)                                                            Open data
+──────────────────                                                         ─────────────────
+Dashboard  ── latest 6 months, one month at a time, retry when busy ──▶   data.police.uk
+  map / list / charts      deduped, packed and cached in the browser for 12 hours
+  (filters run client-side)
+ReportForm ── UK-only address lookup ─────────────────────────────────▶   OpenStreetMap Nominatim
 ```
 
 - `lib/police.ts` fetches and normalises police records, with retries because the API rate-limits.
+- `lib/data.ts` loads a city's last six months and caches it in `localStorage`.
+- `lib/geocode.ts` turns a typed address into coordinates.
 - `lib/dedupe.ts` removes duplicate records.
-- `lib/compact.ts` packs crimes into lookup tables, so the London payload (about 26,000 crimes) is around 1 MB instead of about 3 MB.
+- `lib/compact.ts` packs crimes into lookup tables, so London (about 26,000 crimes) is cached in around 1 MB instead of about 3 MB.
 - `lib/stats.ts` holds the counting and filtering behind the charts and list.
 - `components/` has the dashboard, the Leaflet map (react-leaflet with leaflet.heat), the list, the charts (Chart.js) and the report form.
 
@@ -38,7 +43,7 @@ ReportForm ── GET /api/geocode ──▶  UK-only address lookup          �
 | Original (2025) | This rebuild (2026) | Why |
 |---|---|---|
 | Laravel 12, PHP 8, Blade views | Next.js, React, TypeScript | Runs as a free live demo, and matches the stack I work in now |
-| MySQL table filled by an "import" button | Fetched live from the API and cached for a day | No database to host; data stays current |
+| Laravel server and MySQL, filled by an "import" button | Static site; the browser fetches live from the API and caches for 12 hours | Free to host anywhere, nothing to run; data stays current |
 | Duplicates matched on type, location, coordinates and month | Matched on the police record id | Police data snaps crimes to anonymous points, so different crimes on the same street in the same month can share all four values |
 | OpenCage geocoding (API key) | OpenStreetMap Nominatim (no key) | Free, with no secrets to manage |
 | Manual reports saved to MySQL | Saved in the browser (localStorage) | A public demo shouldn't let anyone write to a shared database |
@@ -53,7 +58,7 @@ You need Node.js 20 or newer.
 npm install
 npm run dev      # http://localhost:3000
 npm test         # unit tests
-npm run build    # production build
+npm run build    # static site in ./out
 ```
 
 No API keys are needed.
