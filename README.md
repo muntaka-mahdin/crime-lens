@@ -1,10 +1,10 @@
 # Crime Lens
 
-[![Build and deploy](https://github.com/muntaka123/crime-lens/actions/workflows/pages.yml/badge.svg)](https://github.com/muntaka123/crime-lens/actions/workflows/pages.yml)
+[![Build and deploy](https://github.com/muntaka-mahdin/crime-lens/actions/workflows/pages.yml/badge.svg)](https://github.com/muntaka-mahdin/crime-lens/actions/workflows/pages.yml)
 
 An interactive street crime map and analytics dashboard for UK city centres, built on open data from [data.police.uk](https://data.police.uk).
 
-**Live demo: [muntaka123.github.io/crime-lens](https://muntaka123.github.io/crime-lens/)**
+**Live demo: [muntaka-mahdin.github.io/crime-lens](https://muntaka-mahdin.github.io/crime-lens/)**
 
 Pick a city and Crime Lens shows the last six months of reported street crime on a map, with a heatmap of where it's concentrated, a filterable list, and charts for crime types, monthly trends and the top hotspots. You can also add your own report, which is geocoded from a typed address and shown on the map.
 
@@ -75,6 +75,6 @@ No API keys are needed.
 
 ## Author
 
-**Muntaka Mahdin** · [GitHub](https://github.com/muntaka123) · [LinkedIn](https://www.linkedin.com/in/muntaka-mahdin-2a80b8233/)
+**Muntaka Mahdin** · [GitHub](https://github.com/muntaka-mahdin) · [LinkedIn](https://www.linkedin.com/in/muntaka-mahdin-2a80b8233/)
 
-More of my projects: [Hotel cancellation prediction](https://github.com/muntaka123/hotel-cancellation-prediction) · [Pet Activity Tracker](https://github.com/muntaka123/pet-activity-tracker) · [Card-G](https://github.com/muntaka123/card-g) · [Hand-washing step recognition](https://github.com/muntaka123/hand-washing-steps)
+More of my projects: [Hotel cancellation prediction](https://github.com/muntaka-mahdin/hotel-cancellation-prediction) · [Pet Activity Tracker](https://github.com/muntaka-mahdin/pet-activity-tracker) · [Card-G](https://github.com/muntaka-mahdin/card-g) · [Hand-washing step recognition](https://github.com/muntaka-mahdin/hand-washing-steps)
